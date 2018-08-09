@@ -44,6 +44,10 @@ If you want to use this in your own javascript projects, you need something like
         }
       }
     </script>
+    
+GrowingPacker has an aspectRatio as option. If you don't want the area to grow square-ish then provide the aspect ratio you want (height / width). e.g. 0.5
+
+    new GrowingPacker(0.5);
 
 See source code comments for more details.
 
