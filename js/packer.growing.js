@@ -57,7 +57,9 @@ Example:
 
 ******************************************************************************/
 
-GrowingPacker = function() { };
+GrowingPacker = function() {
+  this.aspectRatio = aspectRatio || 1;
+};
 
 GrowingPacker.prototype = {
 
@@ -95,8 +97,8 @@ GrowingPacker.prototype = {
     var canGrowDown  = (w <= this.root.w);
     var canGrowRight = (h <= this.root.h);
 
-    var shouldGrowRight = canGrowRight && (this.root.h >= (this.root.w + w)); // attempt to keep square-ish by growing right when height is much greater than width
-    var shouldGrowDown  = canGrowDown  && (this.root.w >= (this.root.h + h)); // attempt to keep square-ish by growing down  when width  is much greater than height
+    var shouldGrowRight = canGrowRight && (this.root.h / this.aspectRatio >= (this.root.w + w));
+    var shouldGrowDown  = canGrowDown  && (this.aspectRatio * this.root.w >= (this.root.h + h));
 
     if (shouldGrowRight)
       return this.growRight(w, h);
