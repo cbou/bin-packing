@@ -57,7 +57,7 @@ Example:
 
 ******************************************************************************/
 
-GrowingPacker = function() {
+GrowingPacker = function(aspectRatio) {
   this.aspectRatio = aspectRatio || 1;
 };
 
