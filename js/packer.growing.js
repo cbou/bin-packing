@@ -57,93 +57,130 @@ Example:
 
 ******************************************************************************/
 
-GrowingPacker = function(aspectRatio) {
-  this.aspectRatio = aspectRatio || 1;
-};
+(function() {
+  // Establish the root object, `window` (`self`) in the browser, `global`
+  // on the server, or `this` in some virtual machines. We use `self`
+  // instead of `window` for `WebWorker` support.
+  var root = typeof self == 'object' && self.self === self && self ||
+            typeof global == 'object' && global.global === global && global ||
+            this ||
+            {};
 
-GrowingPacker.prototype = {
+  GrowingPacker = function(aspectRatio) {
+    this.aspectRatio = aspectRatio || 1;
+  };
 
-  fit: function(blocks) {
-    var n, node, block, len = blocks.length;
-    var w = len > 0 ? blocks[0].w : 0;
-    var h = len > 0 ? blocks[0].h : 0;
-    this.root = { x: 0, y: 0, w: w, h: h };
-    for (n = 0; n < len ; n++) {
-      block = blocks[n];
-      if (node = this.findNode(this.root, block.w, block.h))
-        block.fit = this.splitNode(node, block.w, block.h);
-      else
-        block.fit = this.growNode(block.w, block.h);
+  // Export the GrowingPacker object for **Node.js**, with
+  // backwards-compatibility for their old module API. If we're in
+  // the browser, add `_` as a global object.
+  // (`nodeType` is checked to ensure that `module`
+  // and `exports` are not HTML elements.)
+  if (typeof exports != 'undefined' && !exports.nodeType) {
+    if (typeof module != 'undefined' && !module.nodeType && module.exports) {
+      exports = module.exports = GrowingPacker;
     }
-  },
-
-  findNode: function(root, w, h) {
-    if (root.used)
-      return this.findNode(root.right, w, h) || this.findNode(root.down, w, h);
-    else if ((w <= root.w) && (h <= root.h))
-      return root;
-    else
-      return null;
-  },
-
-  splitNode: function(node, w, h) {
-    node.used = true;
-    node.down  = { x: node.x,     y: node.y + h, w: node.w,     h: node.h - h };
-    node.right = { x: node.x + w, y: node.y,     w: node.w - w, h: h          };
-    return node;
-  },
-
-  growNode: function(w, h) {
-    var canGrowDown  = (w <= this.root.w);
-    var canGrowRight = (h <= this.root.h);
-
-    var shouldGrowRight = canGrowRight && (this.root.h / this.aspectRatio >= (this.root.w + w));
-    var shouldGrowDown  = canGrowDown  && (this.aspectRatio * this.root.w >= (this.root.h + h));
-
-    if (shouldGrowRight)
-      return this.growRight(w, h);
-    else if (shouldGrowDown)
-      return this.growDown(w, h);
-    else if (canGrowRight)
-     return this.growRight(w, h);
-    else if (canGrowDown)
-      return this.growDown(w, h);
-    else
-      return null; // need to ensure sensible root starting size to avoid this happening
-  },
-
-  growRight: function(w, h) {
-    this.root = {
-      used: true,
-      x: 0,
-      y: 0,
-      w: this.root.w + w,
-      h: this.root.h,
-      down: this.root,
-      right: { x: this.root.w, y: 0, w: w, h: this.root.h }
-    };
-    if (node = this.findNode(this.root, w, h))
-      return this.splitNode(node, w, h);
-    else
-      return null;
-  },
-
-  growDown: function(w, h) {
-    this.root = {
-      used: true,
-      x: 0,
-      y: 0,
-      w: this.root.w,
-      h: this.root.h + h,
-      down:  { x: 0, y: this.root.h, w: this.root.w, h: h },
-      right: this.root
-    };
-    if (node = this.findNode(this.root, w, h))
-      return this.splitNode(node, w, h);
-    else
-      return null;
+    exports.GrowingPacker = GrowingPacker;
+  } else {
+    root.GrowingPacker = GrowingPacker;
   }
 
-}
+  GrowingPacker.prototype = {
 
+    fit: function(blocks) {
+      var n, node, block, len = blocks.length;
+      var w = len > 0 ? blocks[0].w : 0;
+      var h = len > 0 ? blocks[0].h : 0;
+      this.root = { x: 0, y: 0, w: w, h: h };
+      for (n = 0; n < len ; n++) {
+        block = blocks[n];
+        if (node = this.findNode(this.root, block.w, block.h))
+          block.fit = this.splitNode(node, block.w, block.h);
+        else
+          block.fit = this.growNode(block.w, block.h);
+      }
+    },
+
+    findNode: function(root, w, h) {
+      if (root.used)
+        return this.findNode(root.right, w, h) || this.findNode(root.down, w, h);
+      else if ((w <= root.w) && (h <= root.h))
+        return root;
+      else
+        return null;
+    },
+
+    splitNode: function(node, w, h) {
+      node.used = true;
+      node.down  = { x: node.x,     y: node.y + h, w: node.w,     h: node.h - h };
+      node.right = { x: node.x + w, y: node.y,     w: node.w - w, h: h          };
+      return node;
+    },
+
+    growNode: function(w, h) {
+      var canGrowDown  = (w <= this.root.w);
+      var canGrowRight = (h <= this.root.h);
+
+      var shouldGrowRight = canGrowRight && (this.root.h / this.aspectRatio >= (this.root.w + w));
+      var shouldGrowDown  = canGrowDown  && (this.aspectRatio * this.root.w >= (this.root.h + h));
+
+      if (shouldGrowRight)
+        return this.growRight(w, h);
+      else if (shouldGrowDown)
+        return this.growDown(w, h);
+      else if (canGrowRight)
+       return this.growRight(w, h);
+      else if (canGrowDown)
+        return this.growDown(w, h);
+      else
+        return null; // need to ensure sensible root starting size to avoid this happening
+    },
+
+    growRight: function(w, h) {
+      this.root = {
+        used: true,
+        x: 0,
+        y: 0,
+        w: this.root.w + w,
+        h: this.root.h,
+        down: this.root,
+        right: { x: this.root.w, y: 0, w: w, h: this.root.h }
+      };
+      if (node = this.findNode(this.root, w, h))
+        return this.splitNode(node, w, h);
+      else
+        return null;
+    },
+
+    growDown: function(w, h) {
+      this.root = {
+        used: true,
+        x: 0,
+        y: 0,
+        w: this.root.w,
+        h: this.root.h + h,
+        down:  { x: 0, y: this.root.h, w: this.root.w, h: h },
+        right: this.root
+      };
+      if (node = this.findNode(this.root, w, h))
+        return this.splitNode(node, w, h);
+      else
+        return null;
+    }
+
+  }
+
+
+  // AMD registration happens at the end for compatibility with AMD loaders
+  // that may not enforce next-turn semantics on modules. Even though general
+  // practice for AMD registration is to be anonymous, GrowingPacker registers
+  // as a named module because, like jQuery, it is a base library that is
+  // popular enough to be bundled in a third party lib, but not be part of
+  // an AMD load request. Those cases could generate an error when an
+  // anonymous define() is called outside of a loader request.
+  if (typeof define == 'function' && define.amd) {
+    define('growing-packer', [], function() {
+      return GrowingPacker;
+    });
+  }
+}());
 
